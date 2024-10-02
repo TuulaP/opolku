@@ -11,9 +11,11 @@ course name/type;
 number of ECTS and name of study units
 
 
-´´´
-2022-09-08;Helsingin yliopisto;Avoimen yliopiston opinnot;Demo course of stuff;5.0;op
-´´´
+```
+
+2022-09-08;Helsingin yliopisto;Avoimen yliopiston opinnot;Demo course of stuff;5.0;op;hyväksytty (4)
+
+```
 
 
 
@@ -24,4 +26,4 @@ number of ECTS and name of study units
 - chk translations 
 - loops to all [0] parts to process json properly
 - test with the "real" file with lots of data.
-
+- is there enough data to get pass grade in style 4/5 ? 
