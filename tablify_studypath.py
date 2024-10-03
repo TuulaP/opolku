@@ -1,59 +1,57 @@
-
+# -*- coding: utf-8 -*-
 import json
+import pandas as pd
 
-# Open and read the JSON file
-with open('data1.json', 'rb') as file:
+# Load JSON data
+with open('data2.json', 'rb') as file:
     data = json.load(file)
 
-# Print the data
-#print(data)
-    
-LANG = "fi"
+# Extract course information
+courses = []
+for opiskeluoikeus in data.get('opiskeluoikeudet', []):
+    university_name = opiskeluoikeus.get('oppilaitos', {}).get('nimi', {}).get('en', 'Unknown University')
+    for suoritus in opiskeluoikeus.get('suoritukset', []):
+        # Handle osasuoritukset (submodules or individual courses)
+        for osasuoritus in suoritus.get('osasuoritukset', []):
+            course_name = osasuoritus.get('koulutusmoduuli', {}).get('nimi', {}).get('en', 'Unknown Course')
+            university_name = osasuoritus.get('toimipiste', {}).get('nimi', {}).get('en', university_name)
 
-studyrights = data['opiskeluoikeudet']
-scope= ""
-scopeUnit = ""
+            # Access the 'vahvistus' date safely
+            #if 'vahvistus' in osasuoritus and osasuoritus['vahvistus'] is not None:
+            #    vahvistus_date = osasuoritus['vahvistus'].get('päivä', 'No Date')
+            #else:
+            #    vahvistus_date = 'No Date'
 
-for impl  in studyrights:
+            #print("Vahvistus", vahvistus_date)
 
-    for course in impl:
-        #print(course) keys of json
+            for arviointi in osasuoritus.get('arviointi', []):
+                grade = arviointi.get('arvosana', {}).get('koodiarvo', 'No Grade')
+                passed_date = arviointi.get('päivä', 'No Date')
+                #passed_date = arviointi.get('p\u00E4iv\u00E4', 'No Date')
 
-        if course == 'suoritukset' :
+                laajuus = osasuoritus.get('koulutusmoduuli', {}).get('laajuus', {})
+                study_units = laajuus.get('arvo', 1)  # Default to 1 if not present
 
-            occ = impl['suoritukset']
-
-            for detail in occ:
-            
-                #print("D:", detail)
-            
-
-                coursename=detail['osasuoritukset'][0]['osasuoritukset'][0]['koulutusmoduuli']['nimi'][LANG].split(", ")[0]
-
-
-                #'fi': 'Avoimen yliopiston opinnot, Avoimen yliopiston opinnot' <- split drops the other one.
-                loc =  detail['koulutusmoduuli']['nimi'][LANG].split(", ")[0]
-                org = detail['toimipiste']['nimi'][LANG]
-
-                passedCourse = detail['osasuoritukset'][0]['arviointi'][0]['hyväksytty']
-                passedValue = detail['osasuoritukset'][0]['arviointi'][0]['arvosana']['nimi'][LANG]
-
-                scope  = detail['osasuoritukset'][0]['koulutusmoduuli']['laajuus']['arvo']
-                scopeUnit =  detail['osasuoritukset'][0]['koulutusmoduuli']['laajuus']['yksikkö']['lyhytNimi'][LANG]
-
-                #yyyy-mmm-DD
-                dateapprv = detail['osasuoritukset'][0]['arviointi'][0]['päivä']
-
-                #print(passedCourse, passedValue)
-                if passedCourse :
-                    passed = 'hyväksytty'
-                else:
-                    passed = 'hylätty'
-
-                print("{4};{5};{0};{1};{2};{3};{6} ({7})".format(loc, coursename,scope, scopeUnit, dateapprv, org,passed,passedValue))
-                
+                #print("passed_datee:",passed_date)
+                # Add to courses list
+                courses.append({
+                    'Course_Name': course_name,
+                    'Grade': grade,
+                    'Study_Units': study_units,
+                    'Date': passed_date,
+                    'University': university_name
+                })
 
 
+df = pd.DataFrame(courses)
 
 
+df['Date'] = pd.to_datetime(df['Date'], errors='coerce', format='%Y-%m-%d')  # Ensure date format YYYY-MM-DD
 
+df_sorted = df.sort_values(by='Date', ascending=False)
+
+
+print(df_sorted)
+
+
+df_sorted.to_csv('courses_sorted.csv', index=False)

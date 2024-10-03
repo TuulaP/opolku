@@ -1,3 +1,9 @@
 
 *.json
+*.tmp
+*.csv
+.env
+
+temp/*
+
 
